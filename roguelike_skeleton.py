@@ -79,22 +79,29 @@ class AnimatedActor:
         self.actor.draw()
 
 
-
 class Hero:
     def __init__(self, pos):
-        self.x, self.y = pos
-        self.speed = HERO_SPEED
-        # Só uma imagem por estado
-        self.images = {
-            "idle": "hero_idle",
-            "walk": "hero_walk"
+        self.animations = {
+            'idle': [f'hero_idle_{i}' for i in range(8)],
+            'walk': [f'hero_walk_{i}' for i in range(6)],
+            'dead': [f'hero_dead_{i}' for i in range(4)],
         }
-        self.state = "idle"
-        self.actor = Actor(self.images[self.state], (self.x, self.y))
+        self.state = 'idle'
+        self.frame_index = 0
+        self.frame_time = 0
+        self.frame_duration = 0.15  # tempo entre frames
+        self.pos = list(pos)
+        self.speed = 120
+        self.is_dead = False
+        self.actor = Actor(self.animations[self.state][self.frame_index], self.pos)
 
-    def update(self, dt):
-        dx = 0
-        dy = 0
+    def update(self, dt, sprinting=False):
+        if self.is_dead:
+            self.change_state('dead')
+            self.animate(dt)
+            return
+
+        dx, dy = 0, 0
         if keyboard.left:
             dx -= 1
         if keyboard.right:
@@ -107,22 +114,32 @@ class Hero:
         moving = (dx != 0) or (dy != 0)
 
         if moving:
-            self.state = "walk"
+            speed = self.speed * (2 if sprinting else 1)
             norm = math.hypot(dx, dy)
-            if norm != 0:
-                dx /= norm
-                dy /= norm
-            self.x += dx * self.speed * dt
-            self.y += dy * self.speed * dt
+            dx /= norm
+            dy /= norm
+            self.pos[0] += dx * speed * dt
+            self.pos[1] += dy * speed * dt
+            self.change_state('walk')
         else:
-            self.state = "idle"
+            self.change_state('idle')
 
-        self.x = max(16, min(WIDTH - 16, self.x))
-        self.y = max(16, min(HEIGHT - 16, self.y))
+        self.animate(dt)
+        self.actor.pos = tuple(self.pos)
 
-        # Atualiza a imagem do ator para o estado atual (sem animação)
-        self.actor.image = self.images[self.state]
-        self.actor.pos = (self.x, self.y)
+    def change_state(self, new_state):
+        if new_state != self.state:
+            self.state = new_state
+            self.frame_index = 0
+            self.frame_time = 0
+            self.actor.image = self.animations[self.state][self.frame_index]
+
+    def animate(self, dt):
+        self.frame_time += dt
+        if self.frame_time >= self.frame_duration:
+            self.frame_time = 0
+            self.frame_index = (self.frame_index + 1) % len(self.animations[self.state])
+            self.actor.image = self.animations[self.state][self.frame_index]
 
     def draw(self):
         self.actor.draw()
