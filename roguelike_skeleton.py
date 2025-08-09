@@ -146,42 +146,53 @@ class Hero:
 
 
 class Enemy:
-    def __init__(self, pos, patrol_rect):
-        self.x, self.y = pos
-        self.speed = ENEMY_SPEED
-        self.patrol_rect = patrol_rect
-        angle = random.uniform(0, 2 * math.pi)
-        self.vx = math.cos(angle)
-        self.vy = math.sin(angle)
-        self.images = {
-            "idle": "enemy_idle",
-            "walk": "enemy_walk"
+    def __init__(self, pos, territory):
+        self.animations = {
+            'walk': [f'enemy_walk_{i}' for i in range(6)],
         }
-        self.state = "walk"
-        self.actor = Actor(self.images[self.state], (self.x, self.y))
-        self.change_timer = random.uniform(1.0, 3.0)
+        self.state = 'walk'
+        self.frame_index = 0
+        self.frame_time = 0
+        self.frame_duration = 0.15
+        self.pos = list(pos)
+        self.speed = 100
+        self.is_dead = False
+        self.actor = Actor(self.animations[self.state][self.frame_index], self.pos)
+        self.territory = territory  # pygame.Rect definindo onde o inimigo pode se mover
 
     def update(self, dt, hero_pos):
-        dx = hero_pos[0] - self.x
-        dy = hero_pos[1] - self.y
+        if self.is_dead:
+            return
+
+        dx = hero_pos[0] - self.pos[0]
+        dy = hero_pos[1] - self.pos[1]
         dist = math.hypot(dx, dy)
 
         if dist > 0:
             dx /= dist
             dy /= dist
 
-            self.x += dx * self.speed * dt
-            self.y += dy * self.speed * dt
+            new_x = self.pos[0] + dx * self.speed * dt
+            new_y = self.pos[1] + dy * self.speed * dt
 
-        self.actor.image = self.images[self.state]
-        self.actor.pos = (self.x, self.y)
+            # Limita o movimento ao território
+            if self.territory.left <= new_x <= self.territory.right:
+                self.pos[0] = new_x
+            if self.territory.top <= new_y <= self.territory.bottom:
+                self.pos[1] = new_y
 
+        self.animate(dt)
+        self.actor.pos = tuple(self.pos)
+
+    def animate(self, dt):
+        self.frame_time += dt
+        if self.frame_time >= self.frame_duration:
+            self.frame_time = 0
+            self.frame_index = (self.frame_index + 1) % len(self.animations[self.state])
+            self.actor.image = self.animations[self.state][self.frame_index]
 
     def draw(self):
         self.actor.draw()
-
-    def collides_with_actor(self, actor):
-        return self.actor.colliderect(actor.actor)
 
 
 game_state = STATE_MENU
@@ -196,12 +207,13 @@ buttons = []
 def start_game():
     global game_state, hero, enemies
     game_state = STATE_PLAYING
-    hero.x, hero.y = WIDTH // 2, HEIGHT // 2
+    hero.pos = [WIDTH // 2, HEIGHT // 2]  # atualiza a posição do herói
     if music_on:
         try:
             music.unpause()
         except Exception:
             pass
+
 
 def toggle_music():
     global music_on
@@ -232,10 +244,11 @@ def update(dt):
     if game_state == STATE_PLAYING:
         hero.update(dt)
         for enemy in enemies:
-            enemy.update(dt, (hero.x, hero.y))
-            if enemy.collides_with_actor(hero):
+            enemy.update(dt, tuple(hero.pos))  
+            if enemy.actor.colliderect(hero.actor):
                 sounds.hit.play()
                 game_state = STATE_GAMEOVER
+
 
 def draw():
     screen.clear()
