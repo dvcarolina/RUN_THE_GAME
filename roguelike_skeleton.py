@@ -6,7 +6,7 @@ import math
 
 WIDTH = 800
 HEIGHT = 600
-TITLE = "Escape from Scrabby - Roguelike Skeleton"
+TITLE = "Escape from Crabby - Roguelike Skeleton"
 
 TILE_SIZE = 48
 HERO_SPEED = 160
