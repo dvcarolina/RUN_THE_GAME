@@ -256,7 +256,7 @@ def update(dt):
             dx = hero.pos[0] - enemy.actor.pos[0]
             dy = hero.pos[1] - enemy.actor.pos[1]
             dist = math.hypot(dx, dy)
-            if dist < 10:
+            if dist < 30:
                 if game_state != STATE_DYING:
                     sounds.hit.play()
                     game_state = STATE_DYING
