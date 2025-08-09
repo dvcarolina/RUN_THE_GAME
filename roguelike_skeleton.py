@@ -6,7 +6,7 @@ import math
 
 WIDTH = 800
 HEIGHT = 600
-TITLE = "Dungeon Escape - Roguelike Skeleton"
+TITLE = "Escape from Scrabby - Roguelike Skeleton"
 
 TILE_SIZE = 48
 HERO_SPEED = 160
@@ -23,9 +23,8 @@ music_on = True
 
 try:
     music.play("background")
-    music.pause()
 except Exception:
-    music_on = False
+    pass
 
 
 class Button:
@@ -212,11 +211,13 @@ def start_game():
     global game_state, hero, enemies
     game_state = STATE_PLAYING
     hero.pos = [WIDTH // 2, HEIGHT // 2]  # atualiza a posição do herói
-    if music_on:
-        try:
-            music.unpause()
-        except Exception:
-            pass
+    hero.is_dead = False 
+    hero.change_state('idle')
+    entire_map = Rect(0, 0, WIDTH, HEIGHT)
+    enemies = [
+        Enemy((200, 200), entire_map),
+        Enemy((600, 400), entire_map),
+    ]
 
 
 def toggle_music():
@@ -226,7 +227,10 @@ def toggle_music():
         try:
             music.unpause()
         except Exception:
-            pass
+            try:
+                music.play("background")
+            except Exception:
+                pass
     else:
         try:
             music.pause()
@@ -273,8 +277,15 @@ def draw():
         draw_gameover()
 
 def draw_menu():
-    screen.fill((30, 30, 40))
-    screen.draw.text("DUNGEON ESCAPE",
+    img = images.menu_background
+    img_width = img.get_width()
+    img_height = img.get_height()
+
+    x = (WIDTH - img_width) // 2
+    y = (HEIGHT - img_height) // 2
+
+    screen.blit("menu_background", (x, y))  
+    screen.draw.text("ESCAPE FROM CRABBY",
                      center=(WIDTH // 2, 100),
                      fontsize=56,
                      color="white")
@@ -305,9 +316,5 @@ def on_key_down(key):
     global game_state
     if game_state == STATE_GAMEOVER and key == keys.SPACE:
         game_state = STATE_MENU
-        try:
-            music.stop()
-        except Exception:
-            pass
 
 pgzrun.go()
