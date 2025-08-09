@@ -46,6 +46,40 @@ class Button:
             self.callback()
 
 
+class AnimatedActor:
+    def __init__(self, animations, pos):
+        """
+        animations: dict com chaves de estado e valores listas com nomes das imagens (sem extensão)
+        pos: posição inicial (tupla)
+        """
+        self.animations = animations
+        self.state = 'idle'
+        self.frame_index = 0
+        self.frame_time = 0
+        self.frame_duration = 0.15  # tempo entre frames em segundos
+        self.pos = pos
+        self.actor = Actor(self.animations[self.state][self.frame_index], pos)
+
+    def update(self, dt):
+        self.frame_time += dt
+        if self.frame_time >= self.frame_duration:
+            self.frame_time = 0
+            self.frame_index = (self.frame_index + 1) % len(self.animations[self.state])
+            self.actor.image = self.animations[self.state][self.frame_index]
+        self.actor.pos = self.pos
+
+    def change_state(self, new_state):
+        if new_state != self.state:
+            self.state = new_state
+            self.frame_index = 0
+            self.frame_time = 0
+            self.actor.image = self.animations[self.state][self.frame_index]
+
+    def draw(self):
+        self.actor.draw()
+
+
+
 class Hero:
     def __init__(self, pos):
         self.x, self.y = pos
