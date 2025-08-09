@@ -168,14 +168,14 @@ class Enemy:
         dy = hero_pos[1] - self.pos[1]
         dist = math.hypot(dx, dy)
 
-        if dist > 0:
+        if dist > 5:  # só persegue se estiver a mais de 5 pixels
             dx /= dist
             dy /= dist
 
             new_x = self.pos[0] + dx * self.speed * dt
             new_y = self.pos[1] + dy * self.speed * dt
 
-            # Limita o movimento ao território
+            # limita movimento ao território
             if self.territory.left <= new_x <= self.territory.right:
                 self.pos[0] = new_x
             if self.territory.top <= new_y <= self.territory.bottom:
@@ -197,9 +197,10 @@ class Enemy:
 
 game_state = STATE_MENU
 hero = Hero((WIDTH // 2, HEIGHT // 2))
+entire_map = Rect(0, 0, WIDTH, HEIGHT)
 enemies = [
-    Enemy((200, 200), Rect(150, 150, 200, 200)),
-    Enemy((600, 400), Rect(520, 320, 160, 160)),
+    Enemy((200, 200), entire_map),
+    Enemy((600, 400), entire_map),
 ]
 
 buttons = []
