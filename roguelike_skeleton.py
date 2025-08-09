@@ -15,6 +15,9 @@ ENEMY_SPEED = 90
 STATE_MENU = "menu"
 STATE_PLAYING = "playing"
 STATE_GAMEOVER = "gameover"
+STATE_DYING = "dying"
+death_timer = 0
+death_duration = 2.0
 
 music_on = True
 
@@ -241,21 +244,30 @@ buttons.append(Button("Music On/Off", WIDTH // 2 - button_width // 2, 260, butto
 buttons.append(Button("Exit", WIDTH // 2 - button_width // 2, 340, button_width, button_height, exit_game))
 
 def update(dt):
-    global game_state
+    global game_state, death_timer
     if game_state == STATE_PLAYING:
         hero.update(dt)
         for enemy in enemies:
             enemy.update(dt, tuple(hero.pos))  
             if enemy.actor.colliderect(hero.actor):
-                sounds.hit.play()
-                game_state = STATE_GAMEOVER
-
+                if game_state != STATE_DYING:
+                    sounds.hit.play()
+                    game_state = STATE_DYING
+                    hero.is_dead = True
+                    death_timer = 0
+    
+    elif game_state == STATE_DYING:
+        hero.update(dt)
+        death_timer += dt
+        if death_timer >= death_duration:
+            game_state = STATE_GAMEOVER
+                
 
 def draw():
     screen.clear()
     if game_state == STATE_MENU:
         draw_menu()
-    elif game_state == STATE_PLAYING:
+    elif game_state == STATE_PLAYING or game_state == STATE_DYING:
         draw_game()
     elif game_state == STATE_GAMEOVER:
         draw_gameover()
