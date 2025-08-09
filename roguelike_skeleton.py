@@ -252,8 +252,11 @@ def update(dt):
     if game_state == STATE_PLAYING:
         hero.update(dt)
         for enemy in enemies:
-            enemy.update(dt, tuple(hero.pos))  
-            if enemy.actor.colliderect(hero.actor):
+            enemy.update(dt, tuple(hero.pos))
+            dx = hero.pos[0] - enemy.actor.pos[0]
+            dy = hero.pos[1] - enemy.actor.pos[1]
+            dist = math.hypot(dx, dy)
+            if dist < 10:
                 if game_state != STATE_DYING:
                     sounds.hit.play()
                     game_state = STATE_DYING
