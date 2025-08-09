@@ -110,34 +110,21 @@ class Enemy:
         self.actor = Actor(self.images[self.state], (self.x, self.y))
         self.change_timer = random.uniform(1.0, 3.0)
 
-    def update(self, dt):
-        self.change_timer -= dt
-        if self.change_timer <= 0:
-            self.change_timer = random.uniform(1.0, 3.0)
-            angle = random.uniform(0, 2 * math.pi)
-            self.vx = math.cos(angle)
-            self.vy = math.sin(angle)
+    def update(self, dt, hero_pos):
+        dx = hero_pos[0] - self.x
+        dy = hero_pos[1] - self.y
+        dist = math.hypot(dx, dy)
 
-        self.x += self.vx * self.speed * dt
-        self.y += self.vy * self.speed * dt
+        if dist > 0:
+            dx /= dist
+            dy /= dist
 
-        if self.x < self.patrol_rect.left:
-            self.x = self.patrol_rect.left
-            self.vx *= -1
-        if self.x > self.patrol_rect.right:
-            self.x = self.patrol_rect.right
-            self.vx *= -1
-        if self.y < self.patrol_rect.top:
-            self.y = self.patrol_rect.top
-            self.vy *= -1
-        if self.y > self.patrol_rect.bottom:
-            self.y = self.patrol_rect.bottom
-            self.vy *= -1
+            self.x += dx * self.speed * dt
+            self.y += dy * self.speed * dt
 
-        # Estado simples: sempre "walk"
-        self.state = "walk"
         self.actor.image = self.images[self.state]
         self.actor.pos = (self.x, self.y)
+
 
     def draw(self):
         self.actor.draw()
@@ -194,7 +181,7 @@ def update(dt):
     if game_state == STATE_PLAYING:
         hero.update(dt)
         for enemy in enemies:
-            enemy.update(dt)
+            enemy.update(dt, (hero.x, hero.y))
             if enemy.collides_with_actor(hero):
                 sounds.hit.play()
                 game_state = STATE_GAMEOVER
